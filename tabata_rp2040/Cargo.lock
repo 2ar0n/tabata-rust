@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "tabata_rp2040"
+name = "tabata-rp2040"
 version = "0.1.0"

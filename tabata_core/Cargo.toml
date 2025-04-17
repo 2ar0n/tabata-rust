@@ -1,6 +1,7 @@
 [package]
-name = "tabata_core"
+name = "tabata-core"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+embedded-graphics = "0.7.1"

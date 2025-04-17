@@ -497,6 +497,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "tabata-rp2040"
+version = "0.1.0"
+
+[[package]]
 name = "tabata-simulator"
 version = "0.1.0"
 dependencies = [
