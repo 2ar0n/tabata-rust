@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "tabata_core",
+    "tabata_simulator",
+    "tabata_rp2040",
+]

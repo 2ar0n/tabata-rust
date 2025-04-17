@@ -1,0 +1,6 @@
+[package]
+name = "tabata_rp2040"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
