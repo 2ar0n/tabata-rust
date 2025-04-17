@@ -25,7 +25,10 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     let mut display = SimulatorDisplay::<BinaryColor>::new(Size::new(WIDTH, HEIGHT));
 
-    let mut state = TabataState { remaining_time: 0 };
+    let mut state = TabataState {
+        remaining_time: 0,
+        total_time: TIMER_DURATION,
+    };
     for remaining_time in (0..=TIMER_DURATION).rev() {
         state.remaining_time = remaining_time;
 
