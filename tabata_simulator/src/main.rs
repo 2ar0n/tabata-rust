@@ -11,11 +11,11 @@ use tabata_core::embedded_graphics::{
     text::Text,
 };
 
-use tabata_core::update_display;
+use tabata_core::{TabataState, update_display};
 
 const WIDTH: u32 = 240;
 const HEIGHT: u32 = 320;
-const TIMER_DURATION: u64 = 20; // 20 seconds for demonstration
+const TIMER_DURATION: u64 = 5;
 
 fn main() -> Result<(), core::convert::Infallible> {
     let output_settings = OutputSettingsBuilder::new()
@@ -25,9 +25,11 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     let mut display = SimulatorDisplay::<BinaryColor>::new(Size::new(WIDTH, HEIGHT));
 
+    let mut state = TabataState { remaining_time: 0 };
     for remaining_time in (0..=TIMER_DURATION).rev() {
-        
-        let _ = update_display(&mut display);
+        state.remaining_time = remaining_time;
+
+        let _ = update_display(&mut display, &state);
 
         window.update(&display);
         sleep(Duration::from_secs(1));

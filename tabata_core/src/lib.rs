@@ -1,8 +1,8 @@
 use embedded_graphics::{
+    mono_font::{MonoTextStyle, ascii::FONT_6X9},
     pixelcolor::BinaryColor,
     prelude::*,
     primitives::{Circle, PrimitiveStyleBuilder},
-    mono_font::{ascii::FONT_6X9, MonoTextStyle},
     text::Text,
 };
 
@@ -14,24 +14,22 @@ pub enum Direction {
 }
 
 pub struct TabataState {
-    previous_time: u64,
-    button_is_pressed: bool,
-    remaining_time: u64,
+    // previous_time: u64,
+    // button_is_pressed: bool,
+    pub remaining_time: u64,
 }
 
-pub const WIDTH: u32 = 240;
-pub const HEIGHT: u32 = 320;
-
-pub fn update_display<D>(display: &mut D) -> Result<(), D::Error>
+pub fn update_display<D>(display: &mut D, state: &TabataState) -> Result<(), D::Error>
 where
     D: DrawTarget,
     D::Color: PixelColor + From<BinaryColor>,
 {
     let text_style = MonoTextStyle::new(&FONT_6X9, D::Color::from(BinaryColor::On));
-    let center = Point::new(120, 160);
-    let remaining_time = 10;
     // let time_text = format!("{:02}:{:02}", remaining_time / 60, remaining_time % 60);
     let radius = 10;
+
+    let size = display.bounding_box().size;
+    let center = Point::new(size.width as i32 / 2, size.height as i32 / 2);
 
     display.clear(D::Color::from(BinaryColor::Off))?;
 
@@ -45,16 +43,23 @@ where
         .draw(display)?;
 
     // Draw the timer text
-    let time_text = format!("{:02}:{:02}", remaining_time / 60, remaining_time % 60);
-    Text::new(&time_text, Point::new(center.x - 18, center.y - 10), text_style)
-        .draw(display)?;
+    let time_text = format!("{:02}:{:02}", state.remaining_time / 60, state.remaining_time % 60);
+    Text::new(
+        &time_text,
+        Point::new(center.x - 18, center.y - 10),
+        text_style,
+    )
+    .draw(display)?;
 
     // Draw the exercise and rest indicators
-    Text::new("Exercise", Point::new(center.x - 28, center.y + 20), text_style)
-        .draw(display)?;
+    Text::new(
+        "Exercise",
+        Point::new(center.x - 28, center.y + 20),
+        text_style,
+    )
+    .draw(display)?;
 
-    Text::new("Rest", Point::new(center.x - 14, center.y + 40), text_style)
-        .draw(display)?;
+    Text::new("Rest", Point::new(center.x - 14, center.y + 40), text_style).draw(display)?;
 
     Ok(())
 }
