@@ -1,6 +1,4 @@
-// #![no_std]
-
-use std::sync::Arc;
+#![no_std]
 
 use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_6X9},
@@ -104,12 +102,8 @@ where
         .into_styled(circle_style)
         .draw(display)?;
 
-    // Draw the timer text
-    let time_text = format!(
-        "{:02}:{:02}",
-        app.timer.remaining_time_ms / 1000 / 60,
-        (app.timer.remaining_time_ms / 1000) % 60
-    );
+    let mut buffer = [0u8; 5];
+    let time_text = get_time_text(&mut buffer, app.timer.remaining_time_ms);
     Text::new(
         &time_text,
         Point::new(center.x - 18, center.y - 10),
@@ -128,4 +122,17 @@ where
     Text::new("Rest", Point::new(center.x - 14, center.y + 40), text_style).draw(display)?;
 
     Ok(())
+}
+
+fn get_time_text(buffer: &mut [u8; 5], remaining_time_ms: u64) -> &str {
+    let minutes = (remaining_time_ms / 1000 / 60) as u8;
+    let seconds = ((remaining_time_ms / 1000) % 60) as u8;
+
+    buffer[0] = b'0' + (minutes / 10);
+    buffer[1] = b'0' + (minutes % 10);
+    buffer[2] = b':';
+    buffer[3] = b'0' + (seconds / 10);
+    buffer[4] = b'0' + (seconds % 10);
+
+    unsafe { core::str::from_utf8_unchecked(&buffer[..]) }
 }
