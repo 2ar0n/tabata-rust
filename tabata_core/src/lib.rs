@@ -1,4 +1,4 @@
-#![no_std]
+// #![no_std]
 
 use embedded_graphics::{
     mono_font::{ascii::FONT_6X9, MonoTextStyle},
@@ -10,9 +10,11 @@ use embedded_graphics::{
 
 pub use embedded_graphics;
 
-pub enum Direction {
-    Forward,
-    Backward,
+
+#[derive(Default)]
+pub struct TabataInput {
+    pub button_pressed: bool,
+    pub steps: i32,
 }
 
 #[derive(Default)]
@@ -30,7 +32,7 @@ impl TabataState{
     }
 
     pub fn update(&mut self, elapsed_time: u64) {
-        self.remaining_time_ms = self.remaining_time_ms - elapsed_time;
+        // self.remaining_time_ms = self.remaining_time_ms - elapsed_time;
         
         if self.remaining_time_ms <= 0 {
             self.remaining_time_ms = 0;
@@ -39,7 +41,7 @@ impl TabataState{
     }
 }
 
-pub fn update_display<D>(display: &mut D, state: &TabataState) -> Result<(), D::Error>
+pub fn update_display<D>(display: &mut D, state: &TabataState, input: &TabataInput) -> Result<(), D::Error>
 where
     D: DrawTarget,
     D::Color: PixelColor + From<BinaryColor>,
@@ -67,7 +69,7 @@ where
 
     // Draw the timer text
     // let time_text = format!("{:02}:{:02}", state.remaining_time_ms / 1000 / 60, (state.remaining_time_ms / 1000 + 1) % 60);
-    let time_text = "Hello";
+    let time_text = format!("{}:{}", input.steps, input.button_pressed);
     Text::new(
         &time_text,
         Point::new(center.x - 18, center.y - 10),
