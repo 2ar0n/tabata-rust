@@ -1,7 +1,6 @@
 use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window, sdl2::{Keycode, Mod},
 };
-use sdl2::keyboard::{Keycode, Mod};
 
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
@@ -22,7 +21,7 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     let mut display = SimulatorDisplay::<BinaryColor>::new(Size::new(WIDTH, HEIGHT));
 
-    let mut state : TabataState = Default::default();
+    let mut state: TabataState = Default::default();
     state.start(TIMER_DURATION_MS);
 
     while state.is_running {

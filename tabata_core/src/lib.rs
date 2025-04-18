@@ -1,3 +1,5 @@
+#![no_std]
+
 use embedded_graphics::{
     mono_font::{ascii::FONT_6X9, MonoTextStyle},
     pixelcolor::BinaryColor,
@@ -66,7 +68,8 @@ where
         .draw(display)?;
 
     // Draw the timer text
-    let time_text = format!("{:02}:{:02}", state.remaining_time_ms / 1000 / 60, (state.remaining_time_ms / 1000 + 1) % 60);
+    // let time_text = format!("{:02}:{:02}", state.remaining_time_ms / 1000 / 60, (state.remaining_time_ms / 1000 + 1) % 60);
+    let time_text = "Hello";
     Text::new(
         &time_text,
         Point::new(center.x - 18, center.y - 10),
