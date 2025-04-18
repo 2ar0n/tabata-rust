@@ -24,7 +24,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut state: TabataState = Default::default();
     state.start(TIMER_DURATION_MS);
 
-    while state.is_running {
+    'timer_loop: while state.is_running {
         let target_time = SystemTime::now() + Duration::from_millis(TIMER_STEP_MS);
 
         let _ = update_display(&mut display, &state);
@@ -37,10 +37,10 @@ fn main() -> Result<(), core::convert::Infallible> {
                     keymod: Mod::NOMOD,
                     repeat: false,
                 } => {
-                    break;
+                    break 'timer_loop;
                 }
                 SimulatorEvent::Quit => {
-                    break;
+                    break 'timer_loop;
                 }
                 _ => {}
             }

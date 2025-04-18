@@ -17,8 +17,6 @@ pub enum Direction {
 
 #[derive(Default)]
 pub struct TabataState {
-    // previous_time: u64,
-    // button_is_pressed: bool,
     pub remaining_time_ms: u64,
     pub total_time_ms: u64,
     pub is_running: bool,
