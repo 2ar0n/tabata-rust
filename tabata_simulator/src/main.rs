@@ -7,10 +7,10 @@ use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
 use tabata_core::{
-    TabataInput,
+    TabataApp, TabataInput,
     embedded_graphics::{pixelcolor::BinaryColor, prelude::*},
+    update_display,
 };
-use tabata_core::{TabataState, update_display};
 
 const WIDTH: u32 = 120;
 const HEIGHT: u32 = 160;
@@ -23,7 +23,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut window = Window::new("Tabata Timer", &output_settings);
 
     let mut display = SimulatorDisplay::<BinaryColor>::new(Size::new(WIDTH, HEIGHT));
-    let mut state: TabataState = Default::default();
+    let mut tabata_app: TabataApp = Default::default();
 
     'main_loop: loop {
         let next_wake_time = SystemTime::now() + Duration::from_millis(TIMER_STEP_MS);
@@ -60,9 +60,9 @@ fn main() -> Result<(), core::convert::Infallible> {
             }
         }
 
-        state.update(TIMER_STEP_MS);
+        tabata_app.update(TIMER_STEP_MS, &input);
 
-        let _ = update_display(&mut display, &state, &input);
+        let _ = update_display(&mut display, &tabata_app);
 
         if let Ok(time_left) = next_wake_time.duration_since(SystemTime::now()) {
             sleep(time_left);

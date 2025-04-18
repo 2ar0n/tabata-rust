@@ -12,19 +12,36 @@ pub use embedded_graphics;
 
 
 #[derive(Default)]
+pub struct TabataApp {
+    timer: TabataTimer,
+}
+
+impl TabataApp {
+    pub fn update(&mut self, elapsed_time: u64, input: &TabataInput) {
+        if input.button_pressed && !self.timer.is_running {
+            self.timer.start(5000);
+        }
+
+        if self.timer.is_running {
+            self.timer.update(elapsed_time);
+        }
+    }
+}
+
+#[derive(Default)]
 pub struct TabataInput {
     pub button_pressed: bool,
     pub steps: i32,
 }
 
 #[derive(Default)]
-pub struct TabataState {
+struct TabataTimer {
     pub remaining_time_ms: u64,
     pub total_time_ms: u64,
     pub is_running: bool,
 }
 
-impl TabataState{
+impl TabataTimer{
     pub fn start(&mut self, duration: u64) {
         self.remaining_time_ms = duration;
         self.total_time_ms = duration;
@@ -32,16 +49,16 @@ impl TabataState{
     }
 
     pub fn update(&mut self, elapsed_time: u64) {
-        // self.remaining_time_ms = self.remaining_time_ms - elapsed_time;
-        
-        if self.remaining_time_ms <= 0 {
+        if self.remaining_time_ms > elapsed_time {
+            self.remaining_time_ms = self.remaining_time_ms - elapsed_time;
+        } else {
             self.remaining_time_ms = 0;
             self.is_running = false;
         }
     }
 }
 
-pub fn update_display<D>(display: &mut D, state: &TabataState, input: &TabataInput) -> Result<(), D::Error>
+pub fn update_display<D>(display: &mut D, app: &TabataApp) -> Result<(), D::Error>
 where
     D: DrawTarget,
     D::Color: PixelColor + From<BinaryColor>,
@@ -49,7 +66,7 @@ where
     let text_style: MonoTextStyle<'_, <D as DrawTarget>::Color> = MonoTextStyle::new(&FONT_6X9, D::Color::from(BinaryColor::On));
     let max_radius = 100;
 
-    let progress = (state.total_time_ms - state.remaining_time_ms) as f32 / state.total_time_ms as f32;
+    let progress = (app.timer.total_time_ms - app.timer.remaining_time_ms) as f32 / app.timer.total_time_ms as f32;
     let radius = (progress * max_radius as f32) as i32;
 
     let size = display.bounding_box().size;
@@ -68,8 +85,7 @@ where
         .draw(display)?;
 
     // Draw the timer text
-    // let time_text = format!("{:02}:{:02}", state.remaining_time_ms / 1000 / 60, (state.remaining_time_ms / 1000 + 1) % 60);
-    let time_text = format!("{}:{}", input.steps, input.button_pressed);
+    let time_text = format!("{:02}:{:02}", app.timer.remaining_time_ms / 1000 / 60, (app.timer.remaining_time_ms / 1000 + 1) % 60);
     Text::new(
         &time_text,
         Point::new(center.x - 18, center.y - 10),

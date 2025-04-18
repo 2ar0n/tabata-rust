@@ -19,7 +19,7 @@ use mipidsi::{
 use panic_halt as _;
 use rotary_encoder_embedded::RotaryEncoder;
 
-use tabata_core::{TabataState, update_display};
+use tabata_core::{TabataTimer, update_display};
 
 const TIMER_DURATION_MS: u64 = 5000;
 const TIMER_STEP_MS: u64 = 100;
@@ -68,7 +68,7 @@ async fn main(_spawner: Spawner) {
         .init(&mut Delay)
         .unwrap();
 
-    let mut state: TabataState = Default::default();
+    let mut state: TabataTimer = Default::default();
     state.start(TIMER_DURATION_MS);
 
     let mut current_time: u64 = 0;
