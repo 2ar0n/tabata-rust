@@ -1,8 +1,10 @@
 use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
+use sdl2::keyboard::{Keycode, Mod};
+
 use std::thread::sleep;
-use std::time::{SystemTime, Duration};
+use std::time::{Duration, SystemTime};
 
 use tabata_core::embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 use tabata_core::{TabataState, update_display};
@@ -29,11 +31,27 @@ fn main() -> Result<(), core::convert::Infallible> {
         .step_by(TIMER_STEP_MS as usize)
     {
         let target_time = SystemTime::now() + Duration::from_millis(TIMER_STEP_MS);
-        
+
         state.remaining_time_ms = remaining_time;
         let _ = update_display(&mut display, &state);
         window.update(&display);
-        
+
+        for event in window.events() {
+            match event {
+                SimulatorEvent::KeyUp {
+                    keycode: Keycode::Q,
+                    keymod: Mod::NOMOD,
+                    repeat: false,
+                } => {
+                    break;
+                }
+                SimulatorEvent::Quit => {
+                    break;
+                }
+                _ => {}
+            }
+        }
+
         let current_time = SystemTime::now();
         if let Ok(duration) = target_time.duration_since(current_time) {
             sleep(duration);

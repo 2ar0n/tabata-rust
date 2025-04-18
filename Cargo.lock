@@ -505,6 +505,7 @@ name = "tabata-simulator"
 version = "0.1.0"
 dependencies = [
  "embedded-graphics-simulator",
+ "sdl2",
  "tabata-core",
 ]
 
