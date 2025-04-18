@@ -9,8 +9,8 @@ use std::time::{Duration, SystemTime};
 use tabata_core::embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 use tabata_core::{TabataState, update_display};
 
-const WIDTH: u32 = 240;
-const HEIGHT: u32 = 320;
+const WIDTH: u32 = 120;
+const HEIGHT: u32 = 160;
 const TIMER_DURATION_MS: u64 = 5000;
 const TIMER_STEP_MS: u64 = 100;
 
