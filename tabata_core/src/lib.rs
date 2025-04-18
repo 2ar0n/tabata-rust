@@ -13,11 +13,30 @@ pub enum Direction {
     Backward,
 }
 
+#[derive(Default)]
 pub struct TabataState {
     // previous_time: u64,
     // button_is_pressed: bool,
     pub remaining_time_ms: u64,
     pub total_time_ms: u64,
+    pub is_running: bool,
+}
+
+impl TabataState{
+    pub fn start(&mut self, duration: u64) {
+        self.remaining_time_ms = duration;
+        self.total_time_ms = duration;
+        self.is_running = true;
+    }
+
+    pub fn update(&mut self, elapsed_time: u64) {
+        self.remaining_time_ms = self.remaining_time_ms - elapsed_time;
+        
+        if self.remaining_time_ms <= 0 {
+            self.remaining_time_ms = 0;
+            self.is_running = false;
+        }
+    }
 }
 
 pub fn update_display<D>(display: &mut D, state: &TabataState) -> Result<(), D::Error>
@@ -47,7 +66,7 @@ where
         .draw(display)?;
 
     // Draw the timer text
-    let time_text = format!("{:02}:{:02}", state.remaining_time_ms / 1000/ 60, (state.remaining_time_ms / 1000) % 60);
+    let time_text = format!("{:02}:{:02}", state.remaining_time_ms / 1000 / 60, (state.remaining_time_ms / 1000 + 1) % 60);
     Text::new(
         &time_text,
         Point::new(center.x - 18, center.y - 10),

@@ -22,17 +22,12 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     let mut display = SimulatorDisplay::<BinaryColor>::new(Size::new(WIDTH, HEIGHT));
 
-    let mut state = TabataState {
-        remaining_time_ms: 0,
-        total_time_ms: TIMER_DURATION_MS,
-    };
-    for remaining_time in (0..=TIMER_DURATION_MS)
-        .rev()
-        .step_by(TIMER_STEP_MS as usize)
-    {
+    let mut state : TabataState = Default::default();
+    state.start(TIMER_DURATION_MS);
+
+    while state.is_running {
         let target_time = SystemTime::now() + Duration::from_millis(TIMER_STEP_MS);
 
-        state.remaining_time_ms = remaining_time;
         let _ = update_display(&mut display, &state);
         window.update(&display);
 
@@ -56,6 +51,8 @@ fn main() -> Result<(), core::convert::Infallible> {
         if let Ok(duration) = target_time.duration_since(current_time) {
             sleep(duration);
         }
+
+        state.update(TIMER_STEP_MS);
     }
 
     Ok(())
