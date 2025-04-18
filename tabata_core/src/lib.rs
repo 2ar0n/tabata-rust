@@ -1,7 +1,9 @@
 // #![no_std]
 
+use std::sync::Arc;
+
 use embedded_graphics::{
-    mono_font::{ascii::FONT_6X9, MonoTextStyle},
+    mono_font::{MonoTextStyle, ascii::FONT_6X9},
     pixelcolor::BinaryColor,
     prelude::*,
     primitives::{Circle, PrimitiveStyleBuilder},
@@ -10,7 +12,6 @@ use embedded_graphics::{
 
 pub use embedded_graphics;
 
-
 #[derive(Default)]
 pub struct TabataApp {
     timer: TabataTimer,
@@ -18,11 +19,21 @@ pub struct TabataApp {
 
 impl TabataApp {
     pub fn update(&mut self, elapsed_time: u64, input: &TabataInput) {
-        if input.button_pressed && !self.timer.is_running {
-            self.timer.start(5000);
-        }
+        if !self.timer.is_running {
+            if input.steps > 0 {
+                self.timer.total_time_ms += input.steps as u64 * 1000
+            } else if -input.steps * 1000 < self.timer.total_time_ms as i32 {
+                self.timer.total_time_ms = self.timer.total_time_ms - (-input.steps * 1000) as u64
+            } else {
+                self.timer.total_time_ms = 1
+            }
 
-        if self.timer.is_running {
+            self.timer.remaining_time_ms = self.timer.total_time_ms;
+
+            if input.button_pressed {
+                self.timer.start();
+            }
+        } else {
             self.timer.update(elapsed_time);
         }
     }
@@ -34,17 +45,24 @@ pub struct TabataInput {
     pub steps: i32,
 }
 
-#[derive(Default)]
 struct TabataTimer {
     pub remaining_time_ms: u64,
     pub total_time_ms: u64,
     pub is_running: bool,
 }
 
-impl TabataTimer{
-    pub fn start(&mut self, duration: u64) {
-        self.remaining_time_ms = duration;
-        self.total_time_ms = duration;
+impl Default for TabataTimer {
+    fn default() -> Self {
+        TabataTimer {
+            remaining_time_ms: 5000,
+            total_time_ms: 5000,
+            is_running: false,
+        }
+    }
+}
+
+impl TabataTimer {
+    pub fn start(&mut self) {
         self.is_running = true;
     }
 
@@ -63,10 +81,12 @@ where
     D: DrawTarget,
     D::Color: PixelColor + From<BinaryColor>,
 {
-    let text_style: MonoTextStyle<'_, <D as DrawTarget>::Color> = MonoTextStyle::new(&FONT_6X9, D::Color::from(BinaryColor::On));
+    let text_style: MonoTextStyle<'_, <D as DrawTarget>::Color> =
+        MonoTextStyle::new(&FONT_6X9, D::Color::from(BinaryColor::On));
     let max_radius = 100;
 
-    let progress = (app.timer.total_time_ms - app.timer.remaining_time_ms) as f32 / app.timer.total_time_ms as f32;
+    let progress = (app.timer.total_time_ms - app.timer.remaining_time_ms) as f32
+        / app.timer.total_time_ms as f32;
     let radius = (progress * max_radius as f32) as i32;
 
     let size = display.bounding_box().size;
@@ -79,13 +99,17 @@ where
         .stroke_color(D::Color::from(BinaryColor::On))
         .stroke_width(1)
         .build();
-    let circle_center = center - Point::new(radius/2, radius/2);
+    let circle_center = center - Point::new(radius / 2, radius / 2);
     Circle::new(circle_center, radius as u32)
         .into_styled(circle_style)
         .draw(display)?;
 
     // Draw the timer text
-    let time_text = format!("{:02}:{:02}", app.timer.remaining_time_ms / 1000 / 60, (app.timer.remaining_time_ms / 1000 + 1) % 60);
+    let time_text = format!(
+        "{:02}:{:02}",
+        app.timer.remaining_time_ms / 1000 / 60,
+        (app.timer.remaining_time_ms / 1000) % 60
+    );
     Text::new(
         &time_text,
         Point::new(center.x - 18, center.y - 10),
