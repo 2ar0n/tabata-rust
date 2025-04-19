@@ -2,6 +2,10 @@
 
 This is a learning project to teach myself Rust, specifically for embedded.
 
+## Idea
+
+## Ressources
+
 ## Building
 
 Haven't fully figured this one out yet, for now run:

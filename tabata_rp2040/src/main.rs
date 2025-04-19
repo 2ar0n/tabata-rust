@@ -9,7 +9,6 @@ use embassy_rp::{gpio, spi};
 use embassy_sync::blocking_mutex::{Mutex, raw::NoopRawMutex};
 use embassy_time::{Delay, Timer};
 use gpio::{Input, Level, Output};
-use itoa::Buffer;
 use mipidsi::interface::SpiInterface;
 use mipidsi::{
     Builder,
@@ -19,9 +18,8 @@ use mipidsi::{
 use panic_halt as _;
 use rotary_encoder_embedded::RotaryEncoder;
 
-use tabata_core::{TabataTimer, update_display};
+use tabata_core::{TabataApp, TabataInput, update_display};
 
-const TIMER_DURATION_MS: u64 = 5000;
 const TIMER_STEP_MS: u64 = 100;
 
 #[embassy_executor::main]
@@ -68,26 +66,22 @@ async fn main(_spawner: Spawner) {
         .init(&mut Delay)
         .unwrap();
 
-    let mut state: TabataTimer = Default::default();
-    state.start(TIMER_DURATION_MS);
+    let mut tabata_app: TabataApp = Default::default();
 
     let mut current_time: u64 = 0;
+    let mut button_pressed: bool = false;
     loop {
         current_time = current_time + TIMER_STEP_MS;
+
         rotary_encoder.update(current_time);
 
-        let mut buffer = Buffer::new();
-        let string = buffer.format(current_time as u16);
-        // let string = buffer.format(rotary_encoder.velocity() as u8);
+        let mut input: TabataInput = Default::default();
+        input.button_pressed = button_pressed && rotary_button.is_high();
+        button_pressed = rotary_button.is_high();
+        input.steps = rotary_encoder.velocity() as i32;
 
-        // if rotary_button.is_high() {
-        // TBD
-        // } else {
-        //     display.clear(Rgb565::BLUE).unwrap();
-        // }
-
-        update_display(&mut display, &state);
-        state.update(TIMER_STEP_MS);
+        let _ = update_display(&mut display, &tabata_app);
+        tabata_app.update(TIMER_STEP_MS, &input);
 
         status_led.toggle();
         Timer::after_millis(TIMER_STEP_MS).await;
