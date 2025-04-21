@@ -18,7 +18,7 @@ use mipidsi::{
 use panic_halt as _;
 use rotary_encoder_embedded::RotaryEncoder;
 
-use tabata_core::{TabataApp, TabataInput, update_display};
+use tabata_core::{TabataApp, TabataInput, button::Button, update_display};
 
 const TIMER_STEP_MS: u64 = 100;
 
@@ -32,6 +32,7 @@ async fn main(_spawner: Spawner) {
     let rotary_button = Input::new(p.PIN_8, gpio::Pull::None);
     // Initialize the rotary encoder
     let mut rotary_encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_angular_velocity_mode();
+    let mut button = Button::new(1000);
 
     let tft_spi_clk = p.PIN_18;
     let tft_spi_mosi = p.PIN_19;
@@ -69,15 +70,13 @@ async fn main(_spawner: Spawner) {
     let mut tabata_app: TabataApp = Default::default();
 
     let mut current_time: u64 = 0;
-    let mut button_pressed: bool = false;
     loop {
         current_time = current_time + TIMER_STEP_MS;
 
         rotary_encoder.update(current_time);
 
         let mut input: TabataInput = Default::default();
-        input.button_pressed = button_pressed && rotary_button.is_high();
-        button_pressed = rotary_button.is_high();
+        input.button_press = button.update(TIMER_STEP_MS, rotary_button.is_high());
         input.steps = rotary_encoder.velocity() as i32;
 
         let _ = update_display(&mut display, &tabata_app);

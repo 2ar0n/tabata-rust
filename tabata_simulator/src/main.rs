@@ -8,6 +8,7 @@ use std::time::{Duration, SystemTime};
 
 use tabata_core::{
     TabataApp, TabataInput,
+    button::Button,
     embedded_graphics::{pixelcolor::BinaryColor, prelude::*},
     update_display,
 };
@@ -23,6 +24,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut window = Window::new("Tabata Timer", &output_settings);
 
     let mut display = SimulatorDisplay::<BinaryColor>::new(Size::new(WIDTH, HEIGHT));
+    let mut button = Button::new(1000);
     let mut tabata_app: TabataApp = Default::default();
 
     'main_loop: loop {
@@ -31,6 +33,8 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         let mut input: TabataInput = Default::default();
+
+        let mut is_spacebar_presed = false;
         for event in window.events() {
             match event {
                 SimulatorEvent::KeyUp {
@@ -43,12 +47,12 @@ fn main() -> Result<(), core::convert::Infallible> {
                 SimulatorEvent::Quit => {
                     break 'main_loop;
                 }
-                SimulatorEvent::KeyUp {
+                SimulatorEvent::KeyDown {
                     keycode: Keycode::Space,
                     keymod: Mod::NOMOD,
                     repeat: false,
                 } => {
-                    input.button_pressed = true;
+                    is_spacebar_presed = true;
                 }
                 SimulatorEvent::MouseWheel {
                     scroll_delta,
@@ -60,6 +64,7 @@ fn main() -> Result<(), core::convert::Infallible> {
             }
         }
 
+        input.button_press = button.update(TIMER_STEP_MS, is_spacebar_presed);
         tabata_app.update(TIMER_STEP_MS, &input);
 
         let _ = update_display(&mut display, &tabata_app);

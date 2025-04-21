@@ -18,6 +18,7 @@ TODO
 - [rp2040_hal crate](https://docs.rs/rp2040-hal/latest/rp2040_hal/)
 - [embedded_graphics crate](https://docs.rs/embedded-graphics/latest/embedded_graphics/)
 - [mipdsi crate for interfaces with ST7789 display](https://docs.rs/mipidsi/latest/mipidsi/index.html)
+- [Heapless collection for embedded devices](https://docs.rust-embedded.org/book/collections/index.html#using-heapless)
 
 ## Architecture
 

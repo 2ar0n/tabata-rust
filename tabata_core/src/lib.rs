@@ -1,5 +1,6 @@
 #![no_std]
 
+use button::ButtonPressType;
 use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_6X9},
     pixelcolor::BinaryColor,
@@ -9,6 +10,8 @@ use embedded_graphics::{
 };
 
 pub use embedded_graphics;
+
+pub mod button;
 
 #[derive(Default)]
 pub struct TabataApp {
@@ -28,7 +31,7 @@ impl TabataApp {
 
             self.timer.remaining_time_ms = self.timer.total_time_ms;
 
-            if input.button_pressed {
+            if input.button_press == ButtonPressType::Press {
                 self.timer.start();
             }
         } else {
@@ -39,7 +42,7 @@ impl TabataApp {
 
 #[derive(Default)]
 pub struct TabataInput {
-    pub button_pressed: bool,
+    pub button_press: ButtonPressType,
     pub steps: i32,
 }
 
@@ -55,6 +58,7 @@ impl Default for TabataTimer {
             remaining_time_ms: 5000,
             total_time_ms: 5000,
             is_running: false,
+
         }
     }
 }
