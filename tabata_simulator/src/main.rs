@@ -27,6 +27,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut button = Button::new(1000);
     let mut tabata_app: TabataApp = Default::default();
 
+    let mut is_spacebar_presed = false;
     'main_loop: loop {
         let next_wake_time = SystemTime::now() + Duration::from_millis(TIMER_STEP_MS);
 
@@ -34,7 +35,6 @@ fn main() -> Result<(), core::convert::Infallible> {
 
         let mut input: TabataInput = Default::default();
 
-        let mut is_spacebar_presed = false;
         for event in window.events() {
             match event {
                 SimulatorEvent::KeyUp {
@@ -53,6 +53,13 @@ fn main() -> Result<(), core::convert::Infallible> {
                     repeat: false,
                 } => {
                     is_spacebar_presed = true;
+                }
+                SimulatorEvent::KeyUp {
+                    keycode: Keycode::Space,
+                    keymod: Mod::NOMOD,
+                    repeat: false,
+                } => {
+                    is_spacebar_presed = false;
                 }
                 SimulatorEvent::MouseWheel {
                     scroll_delta,
