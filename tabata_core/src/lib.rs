@@ -19,31 +19,66 @@ pub struct TabataApp {
     cycle: u8,
     set: u8,
     remaining_time_ms: u64,
+    is_paused: bool,
+    configuration_menu: u8,
 }
 
 impl TabataApp {
     pub fn update(&mut self, elapsed_time_ms: u64, input: &TabataInput) {
         if self.state == State::Configuring {
-            if (input.button_press == ButtonPressType::Press) {
-                self.state = State::Running;
-            }
+            self.configure(&input);
         } else {
-            if self.remaining_time_ms > elapsed_time_ms {
-                self.remaining_time_ms = self.remaining_time_ms - elapsed_time_ms;
-            } else {
-                self.cycle += 1;
-                if self.cycle >= self.config.nb_cycles {
-                    self.set += 1;
-                    self.cycle = 0;
+            match input.button_press {
+                ButtonPressType::Press => {
+                    self.is_paused = !self.is_paused;
                 }
-                if self.set >= self.config.nb_sets {
-                    self.set = 0;
+                ButtonPressType::LongPress => {
                     self.state = State::Configuring;
-                    return;
                 }
-                // TODO: work/rest and set rest timers
-                self.remaining_time_ms = (self.config.work_time as u64) * 1000;
+                ButtonPressType::NotPressed => {
+                    if !self.is_paused{
+                    self.run_timer(elapsed_time_ms);
+                }}
             }
+        }
+    }
+
+    fn configure(&mut self, input: &TabataInput) {
+        if input.button_press == ButtonPressType::Press {
+            self.configuration_menu += 1; // TODO: saturate
+        } else if input.button_press == ButtonPressType::LongPress {
+            self.configuration_menu -= 1; // TODO: saturate
+        }
+
+        if self.configuration_menu > 4 {
+            self.state = State::Running;
+            self.is_paused = false;
+            self.remaining_time_ms = (self.config.work_time as u64) * 1000;
+        }
+
+        match self.configuration_menu {
+            0 => {self.config.work_time += input.steps as u8;} // TODO: saturate
+            _ => {}
+        }
+
+    }
+
+    fn run_timer(&mut self, elapsed_time_ms: u64) {
+        if self.remaining_time_ms > elapsed_time_ms {
+            self.remaining_time_ms = self.remaining_time_ms - elapsed_time_ms;
+        } else {
+            self.cycle += 1;
+            if self.cycle >= self.config.nb_cycles {
+                self.set += 1;
+                self.cycle = 0;
+            }
+            if self.set >= self.config.nb_sets {
+                self.set = 0;
+                self.state = State::Configuring;
+                return;
+            }
+            // TODO: work/rest and set rest timers
+            self.remaining_time_ms = (self.config.work_time as u64) * 1000;
         }
     }
 }
@@ -111,7 +146,14 @@ where
     //     .draw(display)?;
 
     let mut buffer = [0u8; 5];
-    let time_text = get_time_text(&mut buffer, app.remaining_time_ms);
+
+    let time_to_display = if app.state == State::Running {
+        app.remaining_time_ms
+    } else {
+        (app.config.work_time as u64) * 1000
+    };
+
+    let time_text = get_time_text(&mut buffer, time_to_display);
     Text::new(
         &time_text,
         Point::new(center.x - 18, center.y - 10),

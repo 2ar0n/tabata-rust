@@ -22,13 +22,13 @@ impl Button {
         }
     }
 
-    pub fn update(&mut self, time_elapsed: u64, is_pressed: bool) -> ButtonPressType {
+    pub fn update(&mut self, time_elapsed_ms: u64, is_pressed: bool) -> ButtonPressType {
         let is_released: bool = self.is_pressed && !is_pressed;
         let is_long_press: bool = is_released && (self.time_since_pressed_ms >= self.time_for_long_press_ms);
 
         self.is_pressed = is_pressed;
         if self.is_pressed {
-            self.time_since_pressed_ms += time_elapsed;
+            self.time_since_pressed_ms += time_elapsed_ms;
         } else {
             self.time_since_pressed_ms = 0;
         }
