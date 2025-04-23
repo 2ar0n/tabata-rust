@@ -32,7 +32,7 @@ async fn main(_spawner: Spawner) {
     let rotary_button = Input::new(p.PIN_8, gpio::Pull::None);
     // Initialize the rotary encoder
     let mut rotary_encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_angular_velocity_mode();
-    let mut button = Button::new(1000);
+    let mut button = Button::new(2000);
 
     let tft_spi_clk = p.PIN_18;
     let tft_spi_mosi = p.PIN_19;
@@ -63,7 +63,6 @@ async fn main(_spawner: Spawner) {
         .display_size(240, 320)
         .reset_pin(tft_reset)
         .invert_colors(ColorInversion::Inverted)
-        .orientation(Orientation::new().rotate(Rotation::Deg90))
         .init(&mut Delay)
         .unwrap();
 

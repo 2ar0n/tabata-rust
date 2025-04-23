@@ -1,5 +1,7 @@
 #![no_std]
 
+use core::cmp::min;
+
 use button::ButtonPressType;
 use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_6X9},
@@ -15,12 +17,12 @@ pub mod button;
 #[derive(Default)]
 pub struct TabataApp {
     config: Config,
+    configState: u8,
     state: State,
     cycle: u8,
     set: u8,
     remaining_time_ms: u64,
     is_paused: bool,
-    configuration_menu: u8,
 }
 
 impl TabataApp {
@@ -36,31 +38,48 @@ impl TabataApp {
                     self.state = State::Configuring;
                 }
                 ButtonPressType::NotPressed => {
-                    if !self.is_paused{
-                    self.run_timer(elapsed_time_ms);
-                }}
+                    if !self.is_paused {
+                        self.run_timer(elapsed_time_ms);
+                    }
+                }
             }
         }
     }
 
     fn configure(&mut self, input: &TabataInput) {
         if input.button_press == ButtonPressType::Press {
-            self.configuration_menu += 1; // TODO: saturate
+            self.configState += 1;
+            self.configState = min(self.configState, NUM_CONFIGURATION_STATES + 1);
         } else if input.button_press == ButtonPressType::LongPress {
-            self.configuration_menu -= 1; // TODO: saturate
+            if self.configState > 0 {
+                self.configState -= 1;
+            }
         }
 
-        if self.configuration_menu > 4 {
+        if self.configState > NUM_CONFIGURATION_STATES {
             self.state = State::Running;
             self.is_paused = false;
             self.remaining_time_ms = (self.config.work_time as u64) * 1000;
         }
 
-        match self.configuration_menu {
-            0 => {self.config.work_time += input.steps as u8;} // TODO: saturate
+        match self.configState {
+            0 => {
+                update_timer(&mut self.config.work_time, input.steps);
+            }
+            1 => {
+                update_timer(&mut self.config.rest_time, input.steps);
+            }
+            2 => {
+                update_timer(&mut self.config.nb_cycles, input.steps / 2);
+            }
+            3 => {
+                update_timer(&mut self.config.nb_sets, input.steps / 2);
+            }
+            4 => {
+                update_timer(&mut self.config.rest_between_sets, input.steps);
+            }
             _ => {}
         }
-
     }
 
     fn run_timer(&mut self, elapsed_time_ms: u64) {
@@ -80,6 +99,21 @@ impl TabataApp {
             // TODO: work/rest and set rest timers
             self.remaining_time_ms = (self.config.work_time as u64) * 1000;
         }
+    }
+}
+
+const NUM_CONFIGURATION_STATES: u8 = 5;
+
+fn update_timer(timer: &mut u8, steps: i32) {
+    let temp = *timer as i32 + steps;
+    if temp > 0 {
+        if temp > 255 {
+            *timer = 255u8;
+        } else {
+            *timer = temp as u8;
+        }
+    } else {
+        *timer = 0u8;
     }
 }
 
@@ -145,28 +179,76 @@ where
     //     .into_styled(circle_style)
     //     .draw(display)?;
 
-    let mut buffer = [0u8; 5];
-
-    let time_to_display = if app.state == State::Running {
-        app.remaining_time_ms
+    if app.state == State::Configuring {
+        match app.configState {
+            0 => {
+                let text = "WORK TIME";
+                let _ = Text::new(&text, Point::new(center.x, center.y), text_style).draw(display);
+                let time = app.config.work_time;
+                let mut buffer = [0u8; 5];
+                let text = get_time_text(&mut buffer, time as u64);
+                Text::new(&text, Point::new(center.x - 18, center.y - 10), text_style)
+                    .draw(display)?;
+            }
+            1 => {
+                let text = "REST TIME";
+                let _ = Text::new(&text, Point::new(center.x, center.y), text_style).draw(display);
+                let time = app.config.rest_time;
+                let mut buffer = [0u8; 5];
+                let text = get_time_text(&mut buffer, time as u64);
+                Text::new(&text, Point::new(center.x - 18, center.y - 10), text_style)
+                    .draw(display)?;
+            }
+            2 => {
+                let text = "NB CYCLES";
+                let _ = Text::new(&text, Point::new(center.x, center.y), text_style).draw(display);
+                let time = app.config.nb_cycles;
+                let mut buffer = [0u8; 5];
+                let text = get_time_text(&mut buffer, time as u64);
+                Text::new(&text, Point::new(center.x - 18, center.y - 10), text_style)
+                    .draw(display)?;
+            }
+            3 => {
+                let text = "NB SETS";
+                let _ = Text::new(&text, Point::new(center.x, center.y), text_style).draw(display);
+                let time = app.config.nb_sets;
+                let mut buffer = [0u8; 5];
+                let text = get_time_text(&mut buffer, time as u64);
+                Text::new(&text, Point::new(center.x - 18, center.y - 10), text_style)
+                    .draw(display)?;
+            }
+            4 => {
+                let text = "REST in SETS";
+                let _ = Text::new(&text, Point::new(center.x, center.y), text_style).draw(display);
+                let time = app.config.rest_between_sets;
+                let mut buffer = [0u8; 5];
+                let text = get_time_text(&mut buffer, time as u64);
+                Text::new(&text, Point::new(center.x - 18, center.y - 10), text_style)
+                    .draw(display)?;
+            }
+            5 => {
+                let text = "START?";
+                let _ = Text::new(&text, Point::new(center.x, center.y), text_style).draw(display);
+            }
+            _ => {}
+        }
     } else {
-        (app.config.work_time as u64) * 1000
-    };
-
-    let time_text = get_time_text(&mut buffer, time_to_display);
-    Text::new(
-        &time_text,
-        Point::new(center.x - 18, center.y - 10),
-        text_style,
-    )
-    .draw(display)?;
+        let mut buffer = [0u8; 5];
+        let time_text = get_time_text(&mut buffer, app.remaining_time_ms / 1000);
+        Text::new(
+            &time_text,
+            Point::new(center.x - 18, center.y - 10),
+            text_style,
+        )
+        .draw(display)?;
+    }
 
     Ok(())
 }
 
 fn get_time_text(buffer: &mut [u8; 5], remaining_time_ms: u64) -> &str {
-    let minutes = (remaining_time_ms / 1000 / 60) as u8;
-    let seconds = ((remaining_time_ms / 1000) % 60) as u8;
+    let minutes = (remaining_time_ms / 60) as u8;
+    let seconds = ((remaining_time_ms) % 60) as u8;
 
     buffer[0] = b'0' + (minutes / 10);
     buffer[1] = b'0' + (minutes % 10);
