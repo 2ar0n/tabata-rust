@@ -17,7 +17,7 @@ pub mod button;
 #[derive(Default)]
 pub struct TabataApp {
     config: Config,
-    configState: u8,
+    config_state: u8,
     state: State,
     cycle: u8,
     set: u8,
@@ -48,21 +48,21 @@ impl TabataApp {
 
     fn configure(&mut self, input: &TabataInput) {
         if input.button_press == ButtonPressType::Press {
-            self.configState += 1;
-            self.configState = min(self.configState, NUM_CONFIGURATION_STATES + 1);
+            self.config_state += 1;
+            self.config_state = min(self.config_state, NUM_CONFIGURATION_STATES + 1);
         } else if input.button_press == ButtonPressType::LongPress {
-            if self.configState > 0 {
-                self.configState -= 1;
+            if self.config_state > 0 {
+                self.config_state -= 1;
             }
         }
 
-        if self.configState > NUM_CONFIGURATION_STATES {
+        if self.config_state > NUM_CONFIGURATION_STATES {
             self.state = State::Running;
             self.is_paused = false;
             self.remaining_time_ms = (self.config.work_time as u64) * 1000;
         }
 
-        match self.configState {
+        match self.config_state {
             0 => {
                 update_timer(&mut self.config.work_time, input.steps);
             }
@@ -158,29 +158,14 @@ where
 {
     let text_style: MonoTextStyle<'_, <D as DrawTarget>::Color> =
         MonoTextStyle::new(&FONT_6X9, D::Color::from(BinaryColor::On));
-    // let max_radius = 100;
-
-    // let progress = (app.timer.total_time_ms - app.timer.remaining_time_ms) as f32
-    //     / app.timer.total_time_ms as f32;
-    // let radius = (progress * max_radius as f32) as i32;
 
     let size = display.bounding_box().size;
     let center = Point::new(size.width as i32 / 2, size.height as i32 / 2);
 
     display.clear(D::Color::from(BinaryColor::Off))?;
 
-    // // Draw the growing circle
-    // let circle_style = PrimitiveStyleBuilder::new()
-    //     .stroke_color(D::Color::from(BinaryColor::On))
-    //     .stroke_width(1)
-    //     .build();
-    // let circle_center = center - Point::new(radius / 2, radius / 2);
-    // Circle::new(circle_center, radius as u32)
-    //     .into_styled(circle_style)
-    //     .draw(display)?;
-
     if app.state == State::Configuring {
-        match app.configState {
+        match app.config_state {
             0 => {
                 let text = "WORK TIME";
                 let _ = Text::new(&text, Point::new(center.x, center.y), text_style).draw(display);
@@ -241,6 +226,20 @@ where
             text_style,
         )
         .draw(display)?;
+
+        // Draw the growing circle
+        let max_radius = 100_f32;
+        let max_time = (app.config.work_time as f32) * 1000_f32;
+        let progress = (max_time - app.remaining_time_ms as f32) / max_time;
+        let radius = (progress * max_radius) as i32;
+        let circle_style = PrimitiveStyleBuilder::new()
+            .stroke_color(D::Color::from(BinaryColor::On))
+            .stroke_width(1)
+            .build();
+        let circle_center = center - Point::new(radius / 2, radius / 2);
+        Circle::new(circle_center, radius as u32)
+            .into_styled(circle_style)
+            .draw(display)?;
     }
 
     Ok(())
